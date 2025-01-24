@@ -1,47 +1,47 @@
-# Proyecto Base Implementando Clean Architecture
+# Microservicio de Simulador
 
-## Antes de Iniciar
+## Descripción
 
-Empezaremos por explicar los diferentes componentes del proyectos y partiremos de los componentes externos, continuando con los componentes core de negocio (dominio) y por último el inicio y configuración de la aplicación.
+Este microservicio se encarga de simular las condiciones de diferentes productos financieros, como préstamos, tarjetas de crédito e inversiones, para los clientes de Bancolombia. Permite a los clientes obtener una visión previa de las características del producto, como tasas de interés, plazos, cuotas mensuales, etc., antes de tomar una decisión.
 
-Lee el artículo [Clean Architecture — Aislando los detalles](https://medium.com/bancolombia-tech/clean-architecture-aislando-los-detalles-4f9530f35d7a)
+## Arquitectura
 
-# Arquitectura
+El microservicio de Simulador sigue la arquitectura limpia de Bancolombia, con los siguientes componentes:
 
-![Clean Architecture](https://miro.medium.com/max/1400/1*ZdlHz8B0-qu9Y-QO3AXR_w.png)
+### Domain
 
-## Domain
+* **Entidades:** Define las entidades del dominio, como `Simulacion`, `Cliente`, `Producto` y `ReglaNegocio`.
+* **Reglas de negocio:** Implementa las reglas de negocio relacionadas con la simulación de productos financieros.
 
-Es el módulo más interno de la arquitectura, pertenece a la capa del dominio y encapsula la lógica y reglas del negocio mediante modelos y entidades del dominio.
+### Use Cases
 
-## Usecases
+* **Simular producto:**  Orquesta el flujo para simular un producto financiero, incluyendo la obtención de datos del cliente, la aplicación de reglas de negocio y el cálculo de las condiciones del producto.
 
-Este módulo gradle perteneciente a la capa del dominio, implementa los casos de uso del sistema, define lógica de aplicación y reacciona a las invocaciones desde el módulo de entry points, orquestando los flujos hacia el módulo de entities.
+### Infrastructure
 
-## Infrastructure
+* **Driven Adapters:**
+    * **Repositorio de Simulaciones:**  Persiste las simulaciones en una base de datos.
+    * **API Client para Perfil de Cliente:**  Obtiene la información del cliente desde el microservicio de Perfil de Cliente.
+    * **API Client para Catálogo de Productos:** Obtiene la información de los productos desde el microservicio de Catálogo de Productos.
+    * **API Client para Reglas de Negocio:** Consulta las reglas de negocio aplicables a la simulación.
+* **Entry Points:**
+    * **Controlador REST:**  Expone las APIs REST para que los clientes puedan solicitar simulaciones.
 
-### Helpers
+## Dependencias
 
-En el apartado de helpers tendremos utilidades generales para los Driven Adapters y Entry Points.
+* **Microservicio de Perfil de Cliente:**  Para obtener la información del cliente.
+* **Microservicio de Catálogo de Productos:** Para obtener la información de los productos.
+* **Microservicio de Reglas de Negocio:** Para aplicar las reglas de negocio.
+* **Base de datos:** Para persistir las simulaciones.
 
-Estas utilidades no están arraigadas a objetos concretos, se realiza el uso de generics para modelar comportamientos
-genéricos de los diferentes objetos de persistencia que puedan existir, este tipo de implementaciones se realizan
-basadas en el patrón de diseño [Unit of Work y Repository](https://medium.com/@krzychukosobudzki/repository-design-pattern-bc490b256006)
+##  Flujo de trabajo
 
-Estas clases no puede existir solas y debe heredarse su compartimiento en los **Driven Adapters**
-
-### Driven Adapters
-
-Los driven adapter representan implementaciones externas a nuestro sistema, como lo son conexiones a servicios rest,
-soap, bases de datos, lectura de archivos planos, y en concreto cualquier origen y fuente de datos con la que debamos
-interactuar.
-
-### Entry Points
-
-Los entry points representan los puntos de entrada de la aplicación o el inicio de los flujos de negocio.
-
-## Application
-
-Este módulo es el más externo de la arquitectura, es el encargado de ensamblar los distintos módulos, resolver las dependencias y crear los beans de los casos de use (UseCases) de forma automática, inyectando en éstos instancias concretas de las dependencias declaradas. Además inicia la aplicación (es el único módulo del proyecto donde encontraremos la función “public static void main(String[] args)”.
-
-**Los beans de los casos de uso se disponibilizan automaticamente gracias a un '@ComponentScan' ubicado en esta capa.**
+1.  El cliente solicita una simulación a través del API REST.
+2.  El controlador REST recibe la solicitud y la envía al Use Case "Simular producto".
+3.  El Use Case obtiene la información del cliente desde el microservicio de Perfil de Cliente.
+4.  El Use Case obtiene la información del producto desde el microservicio de Catálogo de Productos.
+5.  El Use Case consulta al microservicio de Reglas de Negocio para aplicar las reglas de negocio.
+6.  El Use Case calcula las condiciones del producto simulado.
+7.  El Use Case guarda la simulación en la base de datos a través del Repositorio de Simulaciones.
+8.  El Use Case devuelve la simulación al controlador REST.
+9.  El controlador REST envía la respuesta al cliente.
